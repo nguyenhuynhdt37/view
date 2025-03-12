@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "reactnaitve_tiktok",
+    "slug": "reactnaitve_tiktok",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/logo2.png",
+    "scheme": "TikTok",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#000",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "assets": [
+      "./assets/fonts/"
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#000"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
