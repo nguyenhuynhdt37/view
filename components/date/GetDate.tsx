@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import WheelPicker from "react-native-wheel-picker-android";
+import { Picker } from "@react-native-picker/picker";
 
 const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "Tháng 1",
+  "Tháng 2",
+  "Tháng 3",
+  "Tháng 4",
+  "Tháng 5",
+  "Tháng 6",
+  "Tháng 7",
+  "Tháng 8",
+  "Tháng 9",
+  "Tháng 10",
+  "Tháng 11",
+  "Tháng 12",
 ];
-console.log("WheelPicker", WheelPicker);
 
-const getDaysInMonth = (monthIndex, year) => {
+const getDaysInMonth = (monthIndex: number, year: number) => {
   return new Date(year, monthIndex + 1, 0).getDate();
 };
 
@@ -27,10 +26,23 @@ const years = Array.from({ length: 100 }, (_, i) =>
   (currentYear - i).toString()
 );
 
-const BirthdatePicker = () => {
-  const [selectedMonth, setSelectedMonth] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(0);
-  const [selectedYear, setSelectedYear] = useState(0);
+interface BirthdatePickerProps {
+  selectedMonth: number;
+  setSelectedMonth: (value: number) => void;
+  selectedDay: number;
+  setSelectedDay: (value: number) => void;
+  selectedYear: number;
+  setSelectedYear: (value: number) => void;
+}
+
+const BirthdatePicker = ({
+  selectedDay,
+  selectedMonth,
+  selectedYear,
+  setSelectedDay,
+  setSelectedMonth,
+  setSelectedYear,
+}: BirthdatePickerProps) => {
   const [days, setDays] = useState(
     Array.from({ length: 31 }, (_, i) => (i + 1).toString())
   );
@@ -47,68 +59,35 @@ const BirthdatePicker = () => {
   }, [selectedMonth, selectedYear]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>When’s your birthday?</Text>
-      <Text style={styles.subtitle}>
-        Your birthday won't be shown publicly.
-      </Text>
-
-      <Text style={styles.dateText}>
-        {years[selectedYear]}-{String(selectedMonth + 1).padStart(2, "0")}-
-        {days[selectedDay]}
-      </Text>
-
-      {/* <View style={styles.pickerContainer}>
-        <WheelPicker
-          selectedItem={selectedMonth}
-          data={months}
-          onItemSelected={setSelectedMonth}
-          style={styles.picker}
-        />
-        <WheelPicker
-          selectedItem={selectedDay}
-          data={days}
-          onItemSelected={setSelectedDay}
-          style={styles.picker}
-        />
-        <WheelPicker
-          selectedItem={selectedYear}
-          data={years}
-          onItemSelected={setSelectedYear}
-          style={styles.picker}
-        />
-      </View> */}
-
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
+    <View className='py-5'>
+      <View className=''>
+        <Picker
+          selectedValue={selectedMonth}
+          onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+        >
+          {months.map((month, index) => (
+            <Picker.Item key={index} label={month} value={index} />
+          ))}
+        </Picker>
+        <Picker
+          selectedValue={selectedDay}
+          onValueChange={(itemValue) => setSelectedDay(itemValue)}
+        >
+          {days.map((day, index) => (
+            <Picker.Item key={index} label={day} value={index} />
+          ))}
+        </Picker>
+        <Picker
+          selectedValue={selectedYear}
+          onValueChange={(itemValue) => setSelectedYear(itemValue)}
+        >
+          {years.map((year, index) => (
+            <Picker.Item key={index} label={year} value={index} />
+          ))}
+        </Picker>
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
-  subtitle: { fontSize: 14, color: "#666", marginBottom: 20 },
-  dateText: { fontSize: 18, fontWeight: "bold", marginBottom: 20 },
-  pickerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  picker: { width: 120, height: 150 },
-  button: {
-    backgroundColor: "#ff3b5c",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-});
 
 export default BirthdatePicker;

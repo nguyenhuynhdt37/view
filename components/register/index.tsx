@@ -1,132 +1,56 @@
+import { checkEmailAsync } from "@/axios/api";
+import { checkEmail } from "@/libs/handleCheckSyntax";
+import { useRouter } from "expo-router";
 import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  TextInput,
-  Image,
-} from "react-native";
-import React, { Dispatch, SetStateAction, useState } from "react";
-import {
-  X,
-  CircleHelp,
-  UserRound,
-  CircleX,
-  CircleAlert,
   ArrowLeft,
   Check,
-  Eye,
+  CircleAlert,
+  CircleHelp,
+  CircleX,
   EyeClosed,
+  EyeOff,
+  UserRound,
+  X,
 } from "lucide-react-native";
-import ButtonLogin from "./buttonLogin";
-import GoogleIcon from "@/assets/icons/google.svg";
-import FaceBookIcon from "@/assets/icons/facebook.svg";
+import { useEffect, useState } from "react";
+import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import LineErrror from "../error/LineErrror";
-import { checkEmail } from "@/libs/handleCheckSyntax";
-import { checkEmailAsync } from "@/axios/api";
-import { useRouter } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import ButtonLogin from "../profile/buttonLogin";
 import BirthdatePicker from "../date/GetDate";
+import GoogleIcon from "@/assets/icons/google.svg";
+import FacebookIcon from "@/assets/icons/facebook.svg";
+import { getFormattedDate } from "@/libs/hepper";
+import LoadingButton from "../loading";
 
-console.log("process", process);
-interface IModel {
-  setIsEnable: Dispatch<SetStateAction<boolean>>;
-  isEnable: boolean;
-}
-interface Login {
-  setIsEnable: Dispatch<SetStateAction<boolean>>;
-  setStep: Dispatch<SetStateAction<number>>;
-  step: number;
-}
-interface InfoRegiter {
-  username: string;
-  password?: string;
-  email?: string;
-}
-const ModalAuth = ({ setIsEnable, isEnable }: IModel) => {
-  const [step, setStep] = useState(0);
-
-  return (
-    <Modal animationType='slide' transparent={true} visible={isEnable}>
-      {step === 0 && (
-        <Login setIsEnable={setIsEnable} setStep={setStep} step={step} />
-      )}
-      {step === 1 && (
-        <Register setIsEnable={setIsEnable} setStep={setStep} step={step} />
-      )}
-    </Modal>
-  );
-};
-
-const Login = ({ setStep, step, setIsEnable }: Login) => {
-  const handleLoginGoogle = () => {};
-  return (
-    <View className='flex-1 pt-24 relative'>
-      <Text
-        onPress={() => setStep(1)}
-        className='bg-black h-full absolute top-0 left-0 right-0 opacity-30'
-      ></Text>
-      <View className='bg-white relative h-full rounded-t-xl'>
-        <View className='px-4 py-3'>
-          <View className='flex-row justify-between'>
-            <CircleHelp size={27} color='#ccc' />
-            <TouchableOpacity onPress={() => setIsEnable(false)}>
-              <X size={27} color='#000' />
-            </TouchableOpacity>
-          </View>
-          <Text className='text-4xl font-lexend-bold   pt-16 text-center mt-3 leading-10'>
-            Đăng nhập vào {"\n"} Tiktok
-          </Text>
-
-          <View>
-            <ButtonLogin
-              title='Sử dụng Email | SDT | Tên người dùng'
-              Icon={UserRound}
-              onPress={handleLoginGoogle}
-            />
-            <ButtonLogin
-              title='Tiếp tục với Facebook'
-              Icon={UserRound}
-              Icon2={FaceBookIcon}
-              onPress={handleLoginGoogle}
-            />
-            <ButtonLogin
-              title='Tiếp tục với Google'
-              Icon={UserRound}
-              Icon2={GoogleIcon}
-              onPress={handleLoginGoogle}
-            />
-          </View>
-          <Text className='font-lexend pt-5 text-md text-center text-secondary'>
-            Chọn tài khoản để đăng nhập
-          </Text>
-        </View>
-        <View className='px-4 flex-row justify-center py-5 border-t-[1px] border-[#ededed] absolute left-0 right-0 bottom-0 bg-[#f7f7f9]'>
-          <Text className='font-lexend'>Bạn không có tài khoản ?</Text>
-          <TouchableOpacity onPress={() => setStep(1)}>
-            <Text className='text-primary pl-1 font-lexend-medium text-[#ff4159]'>
-              Đăng ký
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-};
-
-const Register = ({ setStep, setIsEnable, step }: Login) => {
+const Register = () => {
   const [stepRegister, setStepRegister] = useState(0);
-  const [info, setInfo] = useState<InfoRegiter>({ username: "", password: "" });
+  const [info, setInfo] = useState({
+    username: "",
+    password: "",
+    birthday: "",
+  });
+
+  const [selectedMonth, setSelectedMonth] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [selectedYear, setSelectedYear] = useState(0);
   const router = useRouter();
   const [isShowPassword, setIsShowPassword] = useState(false);
-  const [date, setDate] = useState(new Date());
   const [errors, setErrors] = useState({ username: "", password: "" });
   const handleLoginGoogle = () => {};
+  const [loadding, setLoadding] = useState(false);
   const [checkPasswordsatisfied, setCheckPasswordsatisfied] = useState({
     value1: false,
     value2: false,
     value3: false,
   });
+  useEffect(() => {
+    if (selectedDay && selectedMonth && selectedYear) {
+      setInfo({
+        ...info,
+        birthday: getFormattedDate(selectedDay, selectedMonth, selectedYear),
+      });
+    }
+  }, [selectedDay, selectedMonth, selectedYear]);
   const handleContinus = async () => {
     if (!info?.username) {
       setErrors({ ...errors, username: "Vui lòng nhập thông tin" });
@@ -139,7 +63,9 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
       });
       return;
     }
+    setLoadding(true);
     const isEmptyEmail = await checkEmailAsync(info?.username);
+    setLoadding(false);
     if (!isEmptyEmail) {
       setErrors({
         ...errors,
@@ -156,24 +82,22 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
     const isValidLength = value.length >= 8 && value.length <= 20;
     const containsSpecialCharacter = /[!@#$%^&*(),.?":{}|<>]/.test(value);
     setCheckPasswordsatisfied({
-      value1: hasLetterAndNumber,
-      value2: isValidLength,
+      value1: isValidLength,
+      value2: hasLetterAndNumber,
       value3: containsSpecialCharacter,
     });
   };
+  console.log("info", info);
+
   return (
     <View className='flex-1 relative'>
-      {stepRegister === 1 && (
-        <View className='pt-24'>
-          <Text
-            onPress={() => setStep(1)}
-            className='bg-black h-full absolute top-0 left-0 right-0 opacity-30'
-          ></Text>
+      {stepRegister === 0 && (
+        <View>
           <View className='bg-white relative h-full rounded-t-xl'>
             <View className='px-4 py-3'>
               <View className='flex-row justify-between'>
                 <CircleHelp size={27} color='#ccc' />
-                <TouchableOpacity onPress={() => setIsEnable(false)}>
+                <TouchableOpacity onPress={() => router.back()}>
                   <X size={27} color='#000' />
                 </TouchableOpacity>
               </View>
@@ -213,12 +137,19 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
                   <LineErrror title={errors.username} Icon={CircleAlert} />
                 )}
                 <TouchableOpacity
+                  disabled={loadding}
                   onPress={handleContinus}
                   className='w-full bg-[#ff4354] rounded-xl mt-5 py-4'
                 >
-                  <Text className='text-center font-lexend-medium text-white text-md'>
-                    Tiếp tục
-                  </Text>
+                  {loadding ? (
+                    <Text className='text-center font-lexend-medium text-white text-md'>
+                      Tiếp tục
+                    </Text>
+                  ) : (
+                    <View className='bg-black py-4  flex-1 flex-row justify-center'>
+                      <LoadingButton />
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
               <View className='flex-row justify-between'>
@@ -234,7 +165,7 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
                 <ButtonLogin
                   title='Tiếp tục với Facebook'
                   Icon={UserRound}
-                  Icon2={FaceBookIcon}
+                  Icon2={FacebookIcon}
                   onPress={handleLoginGoogle}
                 />
                 <ButtonLogin
@@ -250,7 +181,7 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
             </View>
             <View className='px-4 flex-row justify-center py-5 border-t-[1px] border-[#ededed] absolute left-0 right-0 bottom-0 bg-[#f7f7f9]'>
               <Text className='font-lexend'>Bạn đã có tài khoản ?</Text>
-              <TouchableOpacity onPress={() => setStep(0)}>
+              <TouchableOpacity onPress={() => router.push("/login")}>
                 <Text className='text-primary pl-1 font-lexend-medium text-[#ff4159]'>
                   Đăng nhập
                 </Text>
@@ -259,10 +190,13 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
           </View>
         </View>
       )}
-      {stepRegister === 2 && (
+      {stepRegister === 1 && (
         <View className='bg-[#fff] flex-1 px-5 relative'>
           <View className='flex-row justify-between py-4'>
-            <TouchableOpacity className='pr-3' onPress={() => router.back()}>
+            <TouchableOpacity
+              className='pr-3'
+              onPress={() => setStepRegister(0)}
+            >
               <ArrowLeft stroke={"#000"} width={25} height={25} />
             </TouchableOpacity>
             <Text className='font-lexend-bold text-lg'>Đăng ký</Text>
@@ -270,18 +204,123 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
               <CircleHelp stroke={"#000"} width={25} height={25} />
             </TouchableOpacity>
           </View>
-          <View className='px-4'></View>
+          <View className='px-4'>
+            <Text className='font-lexend-bold mt-5 text-2xl text-center'>
+              Tạo mật khẩu cho tài khoản của bạn
+            </Text>
+            <View className='relative'>
+              <TextInput
+                value={info.password}
+                placeholder='Nhập mật khẩu của bạn'
+                secureTextEntry={!isShowPassword}
+                className='py-2 px-1 border-b-[1px] placeholder:text-secondary border-[#e4e1e4] font-lexend mt-5'
+                onChangeText={handleOnchangePassword}
+              />
+              {info?.password && (
+                <TouchableOpacity
+                  onPress={() =>
+                    setInfo({
+                      ...info,
+                      password: "",
+                    })
+                  }
+                  className='absolute right-12 top-1/2'
+                >
+                  <CircleX size={18} stroke={"#999"} />
+                </TouchableOpacity>
+              )}
+              {info?.password &&
+                (!isShowPassword ? (
+                  <TouchableOpacity
+                    onPress={() => setIsShowPassword(true)}
+                    className='absolute right-2 top-1/2'
+                  >
+                    <EyeClosed size={20} stroke={"#999"} />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setIsShowPassword(false)}
+                    className='absolute right-2 top-1/2'
+                  >
+                    <EyeOff size={20} stroke={"#999"} />
+                  </TouchableOpacity>
+                ))}
+            </View>
+            <View className='py-2'>
+              <View className='flex-row items-center py-1'>
+                <Check
+                  size={20}
+                  stroke={!checkPasswordsatisfied.value1 ? "#ccc" : "#00b400"}
+                />
+                <Text
+                  className={`${
+                    !checkPasswordsatisfied.value1
+                      ? "text-[#ccc]"
+                      : "text-[#111]"
+                  } ml-2 font-lexend `}
+                >
+                  8 ký tự (tối đa 20 ký tự)
+                </Text>
+              </View>
+              <View className='flex-row items-center py-1'>
+                <Check
+                  size={20}
+                  stroke={!checkPasswordsatisfied.value2 ? "#ccc" : "#00b400"}
+                />
+                <Text
+                  className={`${
+                    !checkPasswordsatisfied.value2
+                      ? "text-[#ccc]"
+                      : "text-[#111]"
+                  } ml-2 font-lexend `}
+                >
+                  1 chữ cái và 1 số
+                </Text>
+              </View>
+              <View className='flex-row items-center py-1'>
+                <Check
+                  size={20}
+                  stroke={!checkPasswordsatisfied.value3 ? "#ccc" : "#00b400"}
+                />
+                <Text
+                  className={`${
+                    !checkPasswordsatisfied.value3
+                      ? "text-[#ccc]"
+                      : "text-[#111]"
+                  } ml-2 font-lexend `}
+                >
+                  1 ký tự đặc biệt (Ví dụ: # ? ! $ & @)
+                </Text>
+              </View>
+            </View>
+          </View>
           <View className='flex-1 flex-row'>
-            <TouchableOpacity className=' bottom-5 px-20 left-1/2 transform -translate-x-1/2 py-4 absolute rounded-lg bg-[#ff4354]'>
+            <TouchableOpacity
+              onPress={() => setStepRegister(2)}
+              disabled={
+                !(
+                  checkPasswordsatisfied.value1 &&
+                  checkPasswordsatisfied.value2 &&
+                  checkPasswordsatisfied.value3
+                )
+              }
+              className={`bottom-5 px-20 left-1/2 transform -translate-x-1/2 py-4 absolute rounded-lg ${
+                checkPasswordsatisfied.value1 &&
+                checkPasswordsatisfied.value2 &&
+                checkPasswordsatisfied.value3
+                  ? "bg-[#ff4354]"
+                  : "bg-[#ffbcc2]"
+              }`}
+            >
               <Text className='font-lexend text-white'>Tiếp tục</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
-      {stepRegister === 0 && (
+      {stepRegister === 2 && (
         <View className='bg-[#fff] flex-1 px-5 relative'>
           <View className='flex-row justify-between items-center py-4'>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => setStepRegister(1)}>
               <ArrowLeft stroke={"#000"} width={25} height={25} />
             </TouchableOpacity>
             <Text className='font-lexend-bold text-center text-lg flex-1'>
@@ -307,10 +346,28 @@ const Register = ({ setStep, setIsEnable, step }: Login) => {
               />
             </View>
           </View>
-          <BirthdatePicker />
+          <BirthdatePicker
+            selectedDay={selectedDay}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            setSelectedDay={setSelectedDay}
+            setSelectedMonth={setSelectedMonth}
+            setSelectedYear={setSelectedYear}
+          />
+          <View className='flex-1 absolute bottom-10 left-0 right-0 flex-row justify-center'>
+            <TouchableOpacity
+              disabled={!info.birthday}
+              className={`py-4 px-20 rounded-lg  ${
+                info.birthday ? "bg-[#ff4354]" : "bg-[#ffbcc2]"
+              }`}
+            >
+              <Text className='font-lexend text-white'>Tiếp tục</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
   );
 };
-export default ModalAuth;
+
+export default Register;
