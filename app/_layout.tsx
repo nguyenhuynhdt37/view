@@ -4,6 +4,9 @@ import { useFonts } from "expo-font";
 import store from "@/store";
 import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CardStyleInterpolators } from "@react-navigation/stack";
+import { View } from "react-native";
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     "Lexend-Regular": require("@/assets/fonts/Lexend-Regular.ttf"),
@@ -16,7 +19,12 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: true, // Vuốt để back
+        }}
+      />
     </Provider>
   );
 }
