@@ -3,21 +3,57 @@ import React, { useState } from "react";
 import { ArrowLeft, CircleHelp, X } from "lucide-react-native";
 import { router } from "expo-router";
 import LottieView from "lottie-react-native";
+import { auth_otp_async } from "@/axios/api";
+import { showToast } from "../toast";
+import Toast from "react-native-toast-message";
 
 interface EmailCheckProps {
   setStep?: (value: number) => void;
+  info?: {
+    email: string;
+    password: string;
+    birthday: string;
+  };
 }
 const selectedYear = 0;
-const EmailCheck = ({ setStep }: EmailCheckProps) => {
+const EmailCheck = ({ setStep, info }: EmailCheckProps) => {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [visible, setVisible] = useState(true);
+  const showSnackbar = () => setVisible(true);
+  const hideSnackbar = () => setVisible(true);
   const handleBlur = () => {};
   const handleOnchange = (text: string) => {
     if (error) setError("");
     if (text.length > 6) return;
     setOtp(text);
+  };
+  const handleSubmit = async () => {
+    console.log("submit", otp, info?.email);
+    if (otp.length == 6) {
+      setLoading(true);
+      const res = await auth_otp_async({
+        email: "nguyenhuynhdt37gmail.com",
+        otp: otp,
+      });
+      if (res?.status === 400) {
+        alert();
+        setError(res?.data?.detail);
+        showToast({
+          message: "error",
+          title: "Có lỗi xẩy ra",
+          text2: res?.data?.detail,
+        });
+        Toast.show({
+          type: "success",
+          text1: "alop",
+          text2: "alo",
+        });
+      }
+
+      setLoading(false);
+    }
   };
   return (
     <View className='px-4 py-3 relative bg-white flex-1'>
@@ -48,7 +84,7 @@ const EmailCheck = ({ setStep }: EmailCheckProps) => {
           Chúng tôi đã gửi 1 mã OTP bao gồm 6 số tới Email:
           <Text className='ps-2 font-lexend-medium text-black'>
             {" "}
-            nguyenhuynhdt37@gmail.com
+            {info?.username}
           </Text>
         </Text>
         <View className='relative'>
@@ -58,7 +94,7 @@ const EmailCheck = ({ setStep }: EmailCheckProps) => {
             onChangeText={handleOnchange}
             keyboardType='numeric'
             className={`${
-              !error
+              error
                 ? "border-[#ff5f5f] bg-white"
                 : "border-[#f4f4f4] bg-slate-50"
             } px-4 py-3 mt-5 border-2 rounded-md text-center font-lexend `}
@@ -76,16 +112,10 @@ const EmailCheck = ({ setStep }: EmailCheckProps) => {
       </View>
       <View className='flex-1 absolute bottom-10 left-0 right-0 flex-row justify-center'>
         <TouchableOpacity
-          disabled={
-            new Date().getFullYear() - selectedYear >=
-            new Date().getFullYear() - 15
-          }
-          //   onPress={handleContinusBirthDay}
+          disabled={error.length > 0 || otp.length < 6}
+          onPress={handleSubmit}
           className={`py-4 px-20 rounded-lg  ${
-            new Date().getFullYear() - selectedYear <=
-            new Date().getFullYear() - 15
-              ? "bg-[#ff4354]"
-              : "bg-[#ffbcc2]"
+            !error && otp.length == 6 ? "bg-[#ff4354]" : "bg-[#ffbcc2]"
           }`}
         >
           <Text className='font-lexend text-white'>Xác nhận</Text>

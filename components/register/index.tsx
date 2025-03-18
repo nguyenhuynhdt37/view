@@ -26,9 +26,10 @@ import LottieView from "lottie-react-native";
 import EmailCheck from "../email";
 
 const Register = () => {
-  const [stepRegister, setStepRegister] = useState(0);
+  const [stepRegister, setStepRegister] = useState(3);
+  const [timeOtp];
   const [info, setInfo] = useState({
-    username: "",
+    email: "",
     password: "",
     birthday: "",
   });
@@ -38,7 +39,7 @@ const Register = () => {
   const [selectedYear, setSelectedYear] = useState(0);
   const router = useRouter();
   const [isShowPassword, setIsShowPassword] = useState(false);
-  const [errors, setErrors] = useState({ username: "", password: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
   const handleLoginGoogle = () => {};
   const [loadding, setLoadding] = useState(false);
   const [checkPasswordsatisfied, setCheckPasswordsatisfied] = useState({
@@ -47,34 +48,30 @@ const Register = () => {
     value3: false,
   });
   useEffect(() => {
-    if (selectedDay && selectedMonth && selectedYear) {
-      console.log("ok");
-
-      setInfo({
-        ...info,
-        birthday: getFormattedDate(selectedDay, selectedMonth, selectedYear),
-      });
-    }
+    setInfo({
+      ...info,
+      birthday: getFormattedDate(selectedDay, selectedMonth, selectedYear),
+    });
   }, [selectedDay, selectedMonth, selectedYear]);
   const handleContinus = async () => {
-    if (!info?.username) {
-      setErrors({ ...errors, username: "Vui lòng nhập thông tin" });
+    if (!info?.email) {
+      setErrors({ ...errors, email: "Vui lòng nhập thông tin" });
       return;
     }
-    if (!checkEmail(info?.username)) {
+    if (!checkEmail(info?.email)) {
       setErrors({
         ...errors,
-        username: "Email không hợp lệ vui lòng nhập lại",
+        email: "Email không hợp lệ vui lòng nhập lại",
       });
       return;
     }
     setLoadding(true);
-    const isEmptyEmail = await checkEmailAsync(info?.username);
+    const isEmptyEmail = await checkEmailAsync(info?.email);
     setLoadding(false);
     if (isEmptyEmail?.status) {
       setErrors({
         ...errors,
-        username: "Email đã tồn tại vui lòng nhập lại",
+        email: "Email đã tồn tại vui lòng nhập lại",
       });
       return;
     }
@@ -94,21 +91,25 @@ const Register = () => {
   };
   const handleContinusBirthDay = async () => {
     setLoadding(true);
+    console.log(info);
+
     const res = await createUser({
-      email: info.username,
+      email: info.email,
       password: info.password,
       birthday: info.birthday,
     });
     setLoadding(false);
-    console.log(res);
+    if (res?.data) {
+      setStepRegister(3);
+    }
   };
   console.log(selectedDay, selectedMonth, selectedYear);
 
   return (
     <View className='flex-1'>
       {loadding && <LoadingButton />}
-      <View className='absolute h-full w-full'>
-        {stepRegister === 2 && (
+      <View className='h-full w-full'>
+        {stepRegister === 0 && (
           <View>
             <View className='bg-white relative h-full rounded-t-xl'>
               <View className='px-4 py-3'>
@@ -129,35 +130,35 @@ const Register = () => {
                   <View className='relative'>
                     <TextInput
                       onChangeText={(value: string) => {
-                        setInfo({ ...info, username: value.toString() });
-                        setErrors({ ...errors, username: "" });
+                        setInfo({ ...info, email: value.toString() });
+                        setErrors({ ...errors, email: "" });
                       }}
-                      value={info.username}
+                      value={info.email}
                       className={`py-4 px-4 font-lexend  placeholder:color-[#a5a5a7] rounded-lg pr-10 ${
-                        errors.username
+                        errors.email
                           ? "border-2 border-[#f2401c] bg-[#fff]"
                           : "bg-[#f2f2f2]"
                       }`}
                       placeholder='Nhập Email của bạn để tiếp tục !'
                       numberOfLines={1}
                     />
-                    {info?.username && (
+                    {info?.email && (
                       <TouchableOpacity
-                        onPress={() => setInfo({ ...info, username: "" })}
+                        onPress={() => setInfo({ ...info, email: "" })}
                         className='absolute right-3 top-1/2 transform -translate-y-1/2'
                       >
                         <CircleX width={20} height={20} color={"#9d9d9d"} />
                       </TouchableOpacity>
                     )}
                   </View>
-                  {errors.username && (
-                    <LineErrror title={errors.username} Icon={CircleAlert} />
+                  {errors.email && (
+                    <LineErrror title={errors.email} Icon={CircleAlert} />
                   )}
                   <TouchableOpacity
-                    disabled={loadding || errors.username ? true : false}
+                    disabled={loadding || errors.email ? true : false}
                     onPress={handleContinus}
                     className={` w-full ${
-                      (loadding || errors.username ? true : false)
+                      (loadding || errors.email ? true : false)
                         ? "bg-[#ff929b]"
                         : "bg-[#ff4354]"
                     } rounded-xl mt-5 py-4`}
@@ -410,7 +411,7 @@ const Register = () => {
             </View>
           </View>
         )}
-        {stepRegister === 0 && <EmailCheck />}
+        {stepRegister === 3 && <EmailCheck info={info} />}
       </View>
     </View>
   );
